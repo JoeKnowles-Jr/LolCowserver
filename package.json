@@ -1,0 +1,33 @@
+{
+  "name": "lolcowserver",
+  "version": "1.0.0",
+  "engines": {
+    "node": "18.16.1"
+  },
+  "description": "Backend for LolCowsino",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon ./app.js"
+  },
+  "keywords": [
+    "LolCowsino"
+  ],
+  "author": "J Knowles Jr <joeknowles@joeknowles.com>",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "escpos": "^1.0.3",
+    "escpos-usb": "^3.0.0-alpha.4",
+    "express": "^4.17.1",
+    "express-fileupload": "1.2.1",
+    "gson": "0.1.5",
+    "jwt-simple": "^0.5.6",
+    "mysql2": "^3.10.2",
+    "nodemailer": "^6.6.2",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0"
+  }
+}
