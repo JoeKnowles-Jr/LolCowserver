@@ -6,7 +6,7 @@ const { providerEmail } = require('./keys.js');
 const { providerPassword } = require('./keys.js');
 const cors = require('cors');
 const util = require('util');
-const User = require('./models/user.js');
+// const User = require('./models/user.model.js');
 const SALT = 10;
 
 var transporter = nodemailer.createTransport({
@@ -23,8 +23,7 @@ const app = express();
 
 const eventsRouter = require("./routes/event.routes");
 const betRouter = require("./routes/bet.routes");
-const usersRouter = require("./routes/users.routes");
-const posRouter = require("./routes/pos.routes");
+const usersRouter = require("./routes/user.routes");
 const { stat } = require('fs');
 
 const corsOptions = {
@@ -47,24 +46,37 @@ app.use((err, req, res, next) => {
     return;
 });
 
-app.use("/backend/products", productsRouter);
-app.use("/backend/deliveries", deliveriesRouter);
-app.use("/backend/customers", customersRouter);
-app.use("/backend/addresses", addressesRouter);
-app.use("/backend/orders", ordersRouter);
-app.use("/backend/pos", posRouter);
 
-app.use("/backend/users", usersRouter);
+app.use("/users", usersRouter);
+app.use('/', (req, res) => {
+    res.json({ message: 'Ok' });
+});
 
-app.post('/backend/openCashDrawer', function(req, res) {
-	try {
-	    res.json(printer.openDrawer());
-// 		printer.openDrawer(req);
-	} catch(err) {
-		throw 'Error opening Drawer: ' + err;
-	}
+const { sequelize, User } = require('./models');
+
+
+app.get('/makeuser', function(req, res) {
+    (async () => {
+    try {
+        await sequelize.authenticate();
+        await sequelize.sync(); // use { alter: true } or migrations in production
+        const user = await User.create({
+        email: 'joe@example.com',
+        password: 'secret', // hash this in real apps (bcryptjs available)
+        firstName: 'Joe',
+        lastName: 'Knowles',
+        avatarUrl: '',
+        balance: 100.00
+        });
+        console.log('Created user:', user.toJSON());
+    } catch (err) {
+        console.error(err);
+    } finally {
+        await sequelize.close();
+    }
+    })();
 });
 
 const server = http.createServer(app);
-server.listen();
+server.listen(5000);
 
