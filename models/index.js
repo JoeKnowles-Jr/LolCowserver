@@ -1,16 +1,17 @@
-const { Sequelize } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'lolcow',
-  process.env.DB_USER || 'root',
-  process.env.DB_PASS || '',
+    "cowsino_data",
+    "cowsino_data_admin",
+    "!@#123Cannabis123!@#",
   {
-    host: process.env.DB_HOST || 'localhost',
+      host: "vda8100.is.cc",
     dialect: 'mysql',
     logging: false
   }
 );
 
-const User = require('./user.model')(sequelize);
+const User = require('./user.model')(sequelize, DataTypes);
+const Profile = require('./profile.model')(sequelize, DataTypes);
 
-module.exports = { sequelize, User };
+module.exports = { sequelize, User, Profile };

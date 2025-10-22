@@ -48,35 +48,44 @@ app.use((err, req, res, next) => {
 
 
 app.use("/users", usersRouter);
-app.use('/', (req, res) => {
+app.get('/', (req, res) => {
     res.json({ message: 'Ok' });
+});
+
+app.get('/test', (req, res) => {
+    res.json({ message: 'Testing' });
 });
 
 const { sequelize, User } = require('./models');
 
 
-app.get('/makeuser', function(req, res) {
+app.post('/makeuser', function(req, res) {
     (async () => {
-    try {
-        await sequelize.authenticate();
-        await sequelize.sync(); // use { alter: true } or migrations in production
-        const user = await User.create({
-        email: 'joe@example.com',
-        password: 'secret', // hash this in real apps (bcryptjs available)
-        firstName: 'Joe',
-        lastName: 'Knowles',
-        avatarUrl: '',
-        balance: 100.00
+        try {
+            const u = req.body;
+            await sequelize.authenticate();
+            await sequelize.sync(); // use { alter: true } or migrations in production
+            const user = await User.create({
+            email: u.email,
+            pwHash: u.pwHash, // hash this in real apps (bcryptjs available)
+            firstName: u.firstName,
+            lastName: u.lastName,
+            avatarUrl: u.avatarUrl,
+            balance: u.balance
         });
-        console.log('Created user:', user.toJSON());
+        res.json({ 'Created user:': user.toJSON() });
     } catch (err) {
         console.error(err);
+        return res.json({ type: "Error", message: err });
     } finally {
         await sequelize.close();
+        return res.json({ message: "MakeUser" });
     }
     })();
 });
 
+// const PORT = process.env.PORT || 80;
 const server = http.createServer(app);
-server.listen(5000);
+server.listen(3000);
+
 

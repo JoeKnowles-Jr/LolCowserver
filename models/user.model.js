@@ -1,11 +1,11 @@
-const { DataTypes } = require('sequelize');
-
-const User = (sequelize) => {
+const User = (sequelize, DataTypes) => {
     return sequelize.define('User', {
         userId: {
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER,
             allowNull: false,
-            unique: true
+            unique: true,
+            primaryKey: true,
+            autoIncrement: true
         },
         firstName: {
             type: DataTypes.STRING,
@@ -29,12 +29,21 @@ const User = (sequelize) => {
             type: DataTypes.STRING,
             allowNull: false
         },
-        avatarUrl: {
-            type: DataTypes.STRING,
-            defaultValue: ''
+        needsPwUpdate: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+        profileId: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        balance: {
+            type: DataTypes.DECIMAL,
+            allowNull: false
         }
     }, {
-        timestamps: true, // adds createdAt and updatedAt
+        timestamps: true,
         tableName: 'users'
     });
 }
