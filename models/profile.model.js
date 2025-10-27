@@ -13,6 +13,16 @@ const Profile = (sequelize, DataTypes) => {
             allowNull: false,
             trim: true
         },
+        firstName: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            trim: true
+        },
+        lastName: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            trim: true
+        },
         avatarUrl: {
             type: DataTypes.STRING,
             allowNull: false,

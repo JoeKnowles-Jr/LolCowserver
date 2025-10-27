@@ -1,3 +1,4 @@
+
 const helper = require('../helper');
 const { sequelize, User, Profile } = require('../models');
 const path = require('path');
@@ -17,6 +18,8 @@ async function getAllUsers() {
     } catch (err) {
         console.error(err);
         return ({ message: 'Failed to fetch users' });
+    } finally {
+        // await sequelize.close();
     }
 }
 
@@ -51,13 +54,14 @@ async function getSingleByUsername(username) {
 async function getProfileById(uid) {
     try {
         await sequelize.authenticate();
+        await sequelize.sync();
         const profile = await Profile.findOne({
             where: { userId: uid }
         });
         return profile;
     } catch (err) {
         console.error(err);
-        return { message: 'Failed to fetch user by username' };
+        return { message: 'Failed to fetch profile by userId' };
     }
 }
 
@@ -68,18 +72,15 @@ async function insertUser(u) {
         const user = await User.create({
             email: u.email,
             pwHash: u.pwHash,
-            firstName: u.firstName,
-            lastName: u.lastName,
             avatarUrl: u.avatarUrl,
             balance: u.balance
         });
-        res.json({ 'Created user:': user.toJSON() });
+        return ({ 'Created user:': user.toJSON() });
     } catch (err) {
         console.error(err);
-        return res.json({ type: "Error", message: err });
+        return ({ type: "Error", message: err });
     } finally {
         await sequelize.close();
-        return res.json({ message: "Insert user" });
     }
 }
 
@@ -89,6 +90,8 @@ async function insertProfile(p) {
         await sequelize.sync(); // use { alter: true } or migrations in production
         const user = await Profile.create({
             userId: p.userId,
+            firstName: u.firstName,
+            lastName: u.lastName,
             avatarUrl: p.avatarUrl,
             displayName: p.displayName,
             userBio: p.userBio
@@ -114,7 +117,7 @@ async function uploadAvatar(userId, file) {
     fs.mkdirSync(uploadDir, { recursive: true });
 
     const ext = path.extname(file.name) || '';
-    const fileName = `${Date.now()}-${Math.round(Math.random()*1e9)}${ext}`;
+    const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
     const destPath = path.join(uploadDir, fileName);
 
     // file.mv is provided by express-fileupload
@@ -129,7 +132,7 @@ async function uploadAvatar(userId, file) {
     const user = await User.findByPk(userId);
     if (!user) {
         // optional: delete file on failure
-        try { fs.unlinkSync(destPath); } catch (e) {}
+        try { fs.unlinkSync(destPath); } catch (e) { }
         throw new Error('user not found');
     }
 
@@ -146,7 +149,7 @@ async function updateUser(uid, changes) {
         if (!user) return { message: 'User not found' };
 
         // Only allow updating these fields
-        const allowed = ['email', 'firstName', 'lastName', 'avatarUrl', 'balance', 'pwHash'];
+        const allowed = ['email', 'pwHash', 'needsPwUpdate', 'profileId', 'balance'];
         const toUpdate = {};
         for (const key of allowed) {
             if (Object.prototype.hasOwnProperty.call(changes, key)) {
@@ -171,6 +174,37 @@ async function updateUser(uid, changes) {
     }
 }
 
+async function updateProfile(pid, changes) {
+    try {
+        await sequelize.authenticate();
+
+        const profile = await Profile.findByPk(pid);
+        if (!profile) return { message: 'Profile not found' };
+
+        // Only allow updating these fields
+        const allowed = ['firstName', 'lastName', 'avatarUrl', 'displayName', 'userBio'];
+        const toUpdate = {};
+        for (const key of allowed) {
+            if (Object.prototype.hasOwnProperty.call(changes, key)) {
+                toUpdate[key] = changes[key];
+            }
+        }
+
+        if (Object.keys(toUpdate).length === 0) {
+            return { message: 'No valid fields to update' };
+        }
+
+        await profile.update(toUpdate);
+
+        const plain = profile.get({ plain: true });
+
+        return helper.emptyOrData(plain);
+    } catch (err) {
+        console.error(err);
+        return { message: 'Failed to update profile' };
+    }
+}
+
 async function deleteUser(uid) {
     try {
         await sequelize.authenticate();
@@ -178,14 +212,12 @@ async function deleteUser(uid) {
         const user = await User.findByPk(uid);
         if (!user) return { message: 'User not found' };
 
-        // remove avatar file if present (avatarUrl like "/uploads/avatars/filename")
-        if (user.avatarUrl) {
+        // remove profile if present
+        if (user.profileId) {
             try {
-                const rel = user.avatarUrl.replace(/^\//, ''); // remove leading slash
-                const avatarPath = path.join(__dirname, '..', rel);
-                if (fs.existsSync(avatarPath)) fs.unlinkSync(avatarPath);
+                await deleteProfile(user.profileId);
             } catch (e) {
-                console.error('Failed to remove avatar file:', e);
+                console.error('Failed to remove profile:', e);
             }
         }
 
@@ -194,6 +226,32 @@ async function deleteUser(uid) {
     } catch (err) {
         console.error(err);
         return { message: 'Failed to delete user' };
+    }
+}
+
+async function deleteProfile(pid) {
+    try {
+        await sequelize.authenticate();
+
+        const profile = await Profile.findByPk(pid);
+        if (!profile) return { message: 'Profile not found' };
+
+        // remove avatar file if present (avatarUrl like "/uploads/avatars/filename")
+        if (profile.avatarUrl) {
+            try {
+                const rel = profile.avatarUrl.replace(/^\//, ''); // remove leading slash
+                const avatarPath = path.join(__dirname, '..', rel);
+                if (fs.existsSync(avatarPath)) fs.unlinkSync(avatarPath);
+            } catch (e) {
+                console.error('Failed to remove avatar file:', e);
+            }
+        }
+
+        await profile.destroy();
+        return { message: 'Profile deleted' };
+    } catch (err) {
+        console.error(err);
+        return { message: 'Failed to delete profile' };
     }
 }
 
@@ -206,5 +264,7 @@ module.exports = {
     insertProfile,
     uploadAvatar,
     updateUser,
-    deleteUser
+    updateProfile,
+    deleteUser,
+    deleteProfile
 };

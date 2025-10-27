@@ -7,16 +7,6 @@ const User = (sequelize, DataTypes) => {
             primaryKey: true,
             autoIncrement: true
         },
-        firstName: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            trim: true
-        },
-        lastName: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            trim: true
-        },
         email: {
             type: DataTypes.STRING,
             allowNull: false,
