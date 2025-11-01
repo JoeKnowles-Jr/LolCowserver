@@ -10,9 +10,11 @@ async function getAllUsers() {
         // ensure DB connection (optional if you already connect on startup)
         await sequelize.authenticate();
 
-        const users = await User.findAll({
-            attributes: { exclude: ['pwHash'] } // hide sensitive fields
-        });
+        const users = await User.findAll(
+            // {
+            // attributes: { exclude: ['pwHash'] } // hide sensitive fields
+            // }
+        );
 
         return helper.emptyOrData(users);
     } catch (err) {

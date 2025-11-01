@@ -24,16 +24,16 @@ router.get('/id/:uid', async function (req, res) {
     res.json(await userService.getSingleById(req.params.uid));
 });
 
-// GET /users/profile/:uid
-router.get('/profile/:uid', async function (req, res) {
-    res.json(await userService.getProfileById(req.params.uid));
+// GET /users/profile/:pid
+router.get('/profile/:pid', async function (req, res) {
+    res.json(await userService.getProfileById(req.params.pid));
 });
 
 router.post('/', async function (req, res, next) {
     // res.json(req.body);
     try {
-        const user = await users.insertUser(req.body);
-        res.json({message: 'in post', user});
+        const user = await userService.insertUser(req.body);
+        res.json({user});
     } catch (err) {
         console.error(`Error while saving user: `, err.message);
         next(err);        
@@ -100,7 +100,7 @@ router.put('/profile', async function (req, res) {
         const profileId = body.profileId || (req.user && req.user.profileId);
         if (!profileId) return res.status(400).json({ message: 'profileId required' });
 
-        const updated = await profileService.updateProfile(profileId, body);
+        const updated = await userService.updateProfile(profileId, body);
         // updated may be an error-like object from the service
         if (updated && updated.message && updated.message.toLowerCase().includes('not found')) {
             return res.status(404).json(updated);

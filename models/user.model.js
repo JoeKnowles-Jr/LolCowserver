@@ -26,7 +26,7 @@ const User = (sequelize, DataTypes) => {
         },
         profileId: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: true
         },
         balance: {
             type: DataTypes.DECIMAL,
